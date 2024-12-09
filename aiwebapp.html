@@ -1,0 +1,143 @@
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Snake Game</title>
+        <style>
+            body {
+                margin: 0;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                background-color: #111;
+                color: white;
+                font-family: Arial, sans-serif;
+                flex-direction: column;
+            }
+            canvas {
+                background-color: #333;
+                display: block;
+                margin: auto;
+                border: 2px solid #666;
+            }
+            button {
+                margin-top: 10px;
+                padding: 10px 20px;
+                font-size: 16px;
+                background-color: #444;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+            }
+            button:hover {
+                background-color: #555;
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
+        <button id="restartButton" style="display: none;">Restart Game</button>
+        <script>
+            const canvas = document.getElementById('gameCanvas');
+            const ctx = canvas.getContext('2d');
+            const restartButton = document.getElementById('restartButton');
+    
+            const gridSize = 20;
+            const tileCount = canvas.width / gridSize;
+    
+            let snake, food, dx, dy, score, isGameOver, gameInterval;
+    
+            function initializeGame() {
+                snake = [{ x: 10, y: 10 }];
+                food = { x: 5, y: 5 };
+                dx = 0;
+                dy = 0;
+                score = 0;
+                isGameOver = false;
+    
+                restartButton.style.display = 'none';
+                placeFood();
+                if (gameInterval) clearInterval(gameInterval);
+                gameInterval = setInterval(update, 100);
+            }
+    
+            function drawRect(x, y, color) {
+                ctx.fillStyle = color;
+                ctx.fillRect(x * gridSize, y * gridSize, gridSize, gridSize);
+            }
+    
+            function drawSnake() {
+                snake.forEach(segment => drawRect(segment.x, segment.y, 'lime'));
+            }
+    
+            function drawFood() {
+                drawRect(food.x, food.y, 'red');
+            }
+    
+            function moveSnake() {
+                const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+    
+                if (head.x === food.x && head.y === food.y) {
+                    score++;
+                    placeFood();
+                } else {
+                    snake.pop();
+                }
+    
+                snake.unshift(head);
+    
+                // Check collision with walls or self
+                if (
+                    head.x < 0 || head.y < 0 || head.x >= tileCount || head.y >= tileCount ||
+                    snake.slice(1).some(segment => segment.x === head.x && segment.y === head.y)
+                ) {
+                    endGame();
+                }
+            }
+    
+            function placeFood() {
+                food = {
+                    x: Math.floor(Math.random() * tileCount),
+                    y: Math.floor(Math.random() * tileCount)
+                };
+                // Prevent food from spawning on the snake
+                if (snake.some(segment => segment.x === food.x && segment.y === food.y)) {
+                    placeFood();
+                }
+            }
+    
+            function update() {
+                if (isGameOver) return;
+    
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                moveSnake();
+                drawFood();
+                drawSnake();
+            }
+    
+            function handleKeydown(e) {
+                switch (e.key) {
+                    case 'ArrowUp': if (dy === 0) { dx = 0; dy = -1; } break;
+                    case 'ArrowDown': if (dy === 0) { dx = 0; dy = 1; } break;
+                    case 'ArrowLeft': if (dx === 0) { dx = -1; dy = 0; } break;
+                    case 'ArrowRight': if (dx === 0) { dx = 1; dy = 0; } break;
+                }
+            }
+    
+            function endGame() {
+                isGameOver = true;
+                clearInterval(gameInterval);
+                restartButton.style.display = 'block';
+                alert(`Game Over! Score: ${score}`);
+            }
+    
+            restartButton.addEventListener('click', initializeGame);
+            document.addEventListener('keydown', handleKeydown);
+    
+            initializeGame();
+        </script>
+    </body>
+    </html>
